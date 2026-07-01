@@ -63,6 +63,15 @@ class PerspectiveGuideToolTests(unittest.TestCase):
         self.assertEqual(config.depth_steps, 5)
         self.assertEqual(config.guide_color, "#ff0000")
 
+    def test_controller_renders_panel_controls(self) -> None:
+        controller = PerspectiveGuideController()
+        controls = controller.build_controls()
+
+        self.assertIn("horizon", controls)
+        self.assertIn("vanishing", controls)
+        self.assertIn("angle", controls)
+        self.assertIn("depth", controls)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -5,9 +5,9 @@ from math import cos, radians, sin
 from typing import List, Optional, Sequence, Tuple
 
 try:
-    from tkinter import Tk, Canvas, Label, Scale, StringVar, ttk
+    from tkinter import Canvas, DoubleVar, IntVar, Label, Scale, StringVar, Tk, ttk
 except ImportError:  # pragma: no cover - tkinter may be unavailable in headless environments
-    Tk = Canvas = Label = Scale = StringVar = ttk = None
+    Canvas = DoubleVar = IntVar = Label = Scale = StringVar = Tk = ttk = None
 
 Point = Tuple[float, float]
 Segment = Tuple[Point, Point]
@@ -105,6 +105,9 @@ class ArchitecturePerspectiveGuidePlugin:
 class PerspectiveGuideController:
     """A simple controller for previewing and describing guide settings."""
 
+    def build_controls(self) -> List[str]:
+        return ["horizon", "vanishing", "angle", "depth", "color"]
+
     def build_config(
         self,
         horizon_y: float,
@@ -129,23 +132,59 @@ class PerspectiveGuideController:
         )
 
     def preview_window(self, shape_points: Sequence[Point], config: PerspectiveGuideConfig) -> Optional[object]:
-        if Tk is None:
+        if Tk is None or ttk is None or Canvas is None or Label is None or Scale is None or StringVar is None:
             return None
 
         root = Tk()
         root.title("Architecture Perspective Preview")
-        root.geometry("720x420")
+        root.geometry("820x520")
 
         frame = ttk.Frame(root, padding=12)
         frame.pack(fill="both", expand=True)
 
-        canvas = Canvas(frame, width=640, height=320, bg="white")
-        canvas.pack(fill="both", expand=True)
+        controls_frame = ttk.LabelFrame(frame, text="Controls", padding=10)
+        controls_frame.pack(fill="x", pady=(0, 10))
 
-        guides = create_animation_guides(shape_points, config)
-        for index, (start, end) in enumerate(guides):
-            canvas.create_line(start[0], start[1], end[0], end[1], fill=config.guide_color, width=2 + index % 2)
+        horizon_var = DoubleVar(value=float(config.horizon_y))
+        vanishing_var = DoubleVar(value=float(config.vanishing_x))
+        angle_var = DoubleVar(value=float(config.angle_degrees))
+        depth_var = IntVar(value=int(config.depth_steps))
+        color_var = StringVar(value=config.guide_color)
+
+        def update_preview() -> None:
+            current_config = self.build_config(
+                horizon_y=horizon_var.get(),
+                vanishing_x=vanishing_var.get(),
+                angle_degrees=angle_var.get(),
+                depth_steps=depth_var.get(),
+                guide_color=color_var.get(),
+            )
+            canvas.delete("all")
+            guides = create_animation_guides(shape_points, current_config)
+            for index, (start, end) in enumerate(guides):
+                canvas.create_line(start[0], start[1], end[0], end[1], fill=current_config.guide_color, width=2 + index % 2)
+            info.config(text=self.preview_summary(shape_points, current_config))
+
+        ttk.Label(controls_frame, text="Horizon").grid(row=0, column=0, sticky="w")
+        ttk.Scale(controls_frame, from_=0, to=400, orient="horizontal", variable=horizon_var, command=lambda _value: update_preview()).grid(row=0, column=1, sticky="ew")
+
+        ttk.Label(controls_frame, text="Vanishing").grid(row=1, column=0, sticky="w")
+        ttk.Scale(controls_frame, from_=0, to=800, orient="horizontal", variable=vanishing_var, command=lambda _value: update_preview()).grid(row=1, column=1, sticky="ew")
+
+        ttk.Label(controls_frame, text="Angle").grid(row=2, column=0, sticky="w")
+        ttk.Scale(controls_frame, from_=-90, to=90, orient="horizontal", variable=angle_var, command=lambda _value: update_preview()).grid(row=2, column=1, sticky="ew")
+
+        ttk.Label(controls_frame, text="Depth").grid(row=3, column=0, sticky="w")
+        ttk.Scale(controls_frame, from_=1, to=10, orient="horizontal", variable=depth_var, command=lambda _value: update_preview()).grid(row=3, column=1, sticky="ew")
+
+        ttk.Label(controls_frame, text="Color").grid(row=4, column=0, sticky="w")
+        ttk.Entry(controls_frame, textvariable=color_var).grid(row=4, column=1, sticky="ew")
+        ttk.Button(controls_frame, text="Refresh", command=update_preview).grid(row=5, column=1, sticky="e", pady=(6, 0))
+
+        canvas = Canvas(frame, width=720, height=320, bg="white")
+        canvas.pack(fill="both", expand=True)
 
         info = Label(frame, text=self.preview_summary(shape_points, config), anchor="w")
         info.pack(fill="x", pady=(8, 0))
+        update_preview()
         return root
