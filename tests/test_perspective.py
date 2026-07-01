@@ -53,6 +53,16 @@ class PerspectiveGuideToolTests(unittest.TestCase):
         self.assertIn("25", summary)
         self.assertIn("3", summary)
 
+    def test_controller_builds_config_from_ui_values(self) -> None:
+        controller = PerspectiveGuideController()
+        config = controller.build_config(horizon_y=140, vanishing_x=320, angle_degrees=-15, depth_steps=5, guide_color="#ff0000")
+
+        self.assertEqual(config.horizon_y, 140)
+        self.assertEqual(config.vanishing_x, 320)
+        self.assertEqual(config.angle_degrees, -15)
+        self.assertEqual(config.depth_steps, 5)
+        self.assertEqual(config.guide_color, "#ff0000")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,6 +4,11 @@ from dataclasses import dataclass
 from math import cos, radians, sin
 from typing import List, Optional, Sequence, Tuple
 
+try:
+    from tkinter import Tk, Canvas, Label, Scale, StringVar, ttk
+except ImportError:  # pragma: no cover - tkinter may be unavailable in headless environments
+    Tk = Canvas = Label = Scale = StringVar = ttk = None
+
 Point = Tuple[float, float]
 Segment = Tuple[Point, Point]
 
@@ -100,9 +105,47 @@ class ArchitecturePerspectiveGuidePlugin:
 class PerspectiveGuideController:
     """A simple controller for previewing and describing guide settings."""
 
+    def build_config(
+        self,
+        horizon_y: float,
+        vanishing_x: float,
+        angle_degrees: float,
+        depth_steps: int,
+        guide_color: str,
+    ) -> PerspectiveGuideConfig:
+        return PerspectiveGuideConfig(
+            horizon_y=horizon_y,
+            vanishing_x=vanishing_x,
+            angle_degrees=angle_degrees,
+            depth_steps=depth_steps,
+            guide_color=guide_color,
+        )
+
     def preview_summary(self, shape_points: Sequence[Point], config: PerspectiveGuideConfig) -> str:
         guides = create_animation_guides(shape_points, config)
         return (
             f"Perspective preview: horizon={config.horizon_y}, vanishing={config.vanishing_x}, "
             f"angle={config.angle_degrees}, steps={config.depth_steps}, guides={len(guides)}"
         )
+
+    def preview_window(self, shape_points: Sequence[Point], config: PerspectiveGuideConfig) -> Optional[object]:
+        if Tk is None:
+            return None
+
+        root = Tk()
+        root.title("Architecture Perspective Preview")
+        root.geometry("720x420")
+
+        frame = ttk.Frame(root, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        canvas = Canvas(frame, width=640, height=320, bg="white")
+        canvas.pack(fill="both", expand=True)
+
+        guides = create_animation_guides(shape_points, config)
+        for index, (start, end) in enumerate(guides):
+            canvas.create_line(start[0], start[1], end[0], end[1], fill=config.guide_color, width=2 + index % 2)
+
+        info = Label(frame, text=self.preview_summary(shape_points, config), anchor="w")
+        info.pack(fill="x", pady=(8, 0))
+        return root

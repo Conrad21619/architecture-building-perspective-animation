@@ -7,6 +7,7 @@
     "Convert simple shapes into perspective guide segments",
     "Project points toward a vanishing point",
     "Rotate shapes for alternate angles",
+    "Preview guide lines in an interactive window",
     "Create animation-friendly guide lines for building movement"
   ]
 }
