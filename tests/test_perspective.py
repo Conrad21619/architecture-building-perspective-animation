@@ -95,6 +95,12 @@ class PerspectiveGuideToolTests(unittest.TestCase):
         self.assertEqual(loaded.guide_color, "#00ff00")
         path.unlink(missing_ok=True)
 
+    def test_controller_builds_preset_load_command(self) -> None:
+        controller = PerspectiveGuideController()
+        command = controller.build_preset_load_command("preset.json")
+
+        self.assertEqual(command, "load preset.json")
+
 
 if __name__ == "__main__":
     unittest.main()

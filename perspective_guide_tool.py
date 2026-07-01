@@ -133,6 +133,9 @@ class PerspectiveGuideController:
             f"angle={config.angle_degrees}, steps={config.depth_steps}, guides={len(guides)}"
         )
 
+    def build_preset_load_command(self, path: str) -> str:
+        return f"load {path}"
+
     def save_preset(self, config: PerspectiveGuideConfig, path: Path | str) -> None:
         target = Path(path)
         payload = {
@@ -229,6 +232,11 @@ class PerspectiveGuideController:
                 guide_color=color_var.get(),
             )),
         ).grid(row=5, column=1, sticky="e", pady=(6, 0))
+        ttk.Button(
+            controls_frame,
+            text="Load preset",
+            command=lambda: self._apply_preset_from_file(horizon_var, vanishing_var, angle_var, depth_var, color_var),
+        ).grid(row=6, column=1, sticky="e", pady=(6, 0))
 
         canvas = Canvas(frame, width=720, height=320, bg="white")
         canvas.pack(fill="both", expand=True)
@@ -237,3 +245,25 @@ class PerspectiveGuideController:
         info.pack(fill="x", pady=(8, 0))
         update_preview()
         return root
+
+    def _apply_preset_from_file(
+        self,
+        horizon_var: object,
+        vanishing_var: object,
+        angle_var: object,
+        depth_var: object,
+        color_var: object,
+    ) -> None:
+        if Tk is None:
+            return
+        from tkinter import filedialog
+
+        path = filedialog.askopenfilename(filetypes=[("JSON preset", "*.json")])
+        if not path:
+            return
+        preset = self.load_preset(path)
+        horizon_var.set(preset.horizon_y)
+        vanishing_var.set(preset.vanishing_x)
+        angle_var.set(preset.angle_degrees)
+        depth_var.set(preset.depth_steps)
+        color_var.set(preset.guide_color)
