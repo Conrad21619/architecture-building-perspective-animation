@@ -82,6 +82,19 @@ class PerspectiveGuideToolTests(unittest.TestCase):
         self.assertEqual(payload["config"]["horizon_y"], 120)
         self.assertEqual(payload["config"]["angle_degrees"], 10.0)
 
+    def test_controller_saves_and_loads_json_presets(self) -> None:
+        controller = PerspectiveGuideController()
+        config = PerspectiveGuideConfig(horizon_y=140, vanishing_x=320, depth_steps=5, angle_degrees=-20.0, guide_color="#00ff00")
+        path = Path(__file__).resolve().parent / "tmp_preset.json"
+        controller.save_preset(config, path)
+        loaded = controller.load_preset(path)
+
+        self.assertEqual(loaded.horizon_y, 140)
+        self.assertEqual(loaded.vanishing_x, 320)
+        self.assertEqual(loaded.angle_degrees, -20.0)
+        self.assertEqual(loaded.guide_color, "#00ff00")
+        path.unlink(missing_ok=True)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from math import cos, radians, sin
+from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
 try:
@@ -129,6 +131,28 @@ class PerspectiveGuideController:
         return (
             f"Perspective preview: horizon={config.horizon_y}, vanishing={config.vanishing_x}, "
             f"angle={config.angle_degrees}, steps={config.depth_steps}, guides={len(guides)}"
+        )
+
+    def save_preset(self, config: PerspectiveGuideConfig, path: Path | str) -> None:
+        target = Path(path)
+        payload = {
+            "horizon_y": config.horizon_y,
+            "vanishing_x": config.vanishing_x,
+            "angle_degrees": config.angle_degrees,
+            "depth_steps": config.depth_steps,
+            "guide_color": config.guide_color,
+        }
+        target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    def load_preset(self, path: Path | str) -> PerspectiveGuideConfig:
+        target = Path(path)
+        payload = json.loads(target.read_text(encoding="utf-8"))
+        return PerspectiveGuideConfig(
+            horizon_y=payload["horizon_y"],
+            vanishing_x=payload["vanishing_x"],
+            angle_degrees=payload["angle_degrees"],
+            depth_steps=payload["depth_steps"],
+            guide_color=payload.get("guide_color", "#4f46e5"),
         )
 
     def export_guides(self, shape_points: Sequence[Point], config: PerspectiveGuideConfig) -> dict:
