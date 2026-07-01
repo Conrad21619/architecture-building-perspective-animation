@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import cos, radians, sin
 from typing import List, Optional, Sequence, Tuple
 
 Point = Tuple[float, float]
@@ -12,12 +13,26 @@ class PerspectiveGuideConfig:
     horizon_y: float
     vanishing_x: float
     depth_steps: int = 4
+    angle_degrees: float = 0.0
+    guide_color: str = "#4f46e5"
 
 
 def interpolate_point(start: Point, end: Point, t: float) -> Point:
     return (
         start[0] + (end[0] - start[0]) * t,
         start[1] + (end[1] - start[1]) * t,
+    )
+
+
+def rotate_point(point: Point, angle_degrees: float, origin: Point = (0, 0)) -> Point:
+    angle = radians(angle_degrees)
+    x, y = point
+    ox, oy = origin
+    dx = x - ox
+    dy = y - oy
+    return (
+        ox + dx * cos(angle) - dy * sin(angle),
+        oy + dx * sin(angle) + dy * cos(angle),
     )
 
 
@@ -57,8 +72,12 @@ def build_perspective_guides(shape_points: Sequence[Point], origin: Point, vanis
 
 def create_animation_guides(shape_points: Sequence[Point], config: PerspectiveGuideConfig) -> List[Segment]:
     """Create a simple set of perspective guides for animation planning."""
+    rotated_points = [
+        rotate_point(point, config.angle_degrees)
+        for point in shape_points
+    ]
     return build_perspective_guides(
-        shape_points,
+        rotated_points,
         (0, config.horizon_y),
         (config.vanishing_x, config.horizon_y),
         config.depth_steps,
@@ -73,3 +92,17 @@ class ArchitecturePerspectiveGuidePlugin:
 
     def generate_guides(self, shape_points: Sequence[Point], config: PerspectiveGuideConfig) -> List[Segment]:
         return create_animation_guides(shape_points, config)
+
+    def preview(self, shape_points: Sequence[Point], config: PerspectiveGuideConfig) -> List[Segment]:
+        return self.generate_guides(shape_points, config)
+
+
+class PerspectiveGuideController:
+    """A simple controller for previewing and describing guide settings."""
+
+    def preview_summary(self, shape_points: Sequence[Point], config: PerspectiveGuideConfig) -> str:
+        guides = create_animation_guides(shape_points, config)
+        return (
+            f"Perspective preview: horizon={config.horizon_y}, vanishing={config.vanishing_x}, "
+            f"angle={config.angle_degrees}, steps={config.depth_steps}, guides={len(guides)}"
+        )

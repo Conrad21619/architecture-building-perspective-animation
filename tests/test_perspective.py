@@ -4,7 +4,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from perspective_guide_tool import ArchitecturePerspectiveGuidePlugin, PerspectiveGuideConfig, build_perspective_guides, project_point
+from perspective_guide_tool import (
+    ArchitecturePerspectiveGuidePlugin,
+    PerspectiveGuideConfig,
+    PerspectiveGuideController,
+    build_perspective_guides,
+    project_point,
+    rotate_point,
+)
 
 
 class PerspectiveGuideToolTests(unittest.TestCase):
@@ -30,6 +37,21 @@ class PerspectiveGuideToolTests(unittest.TestCase):
 
         self.assertEqual(len(guides), 3)
         self.assertEqual(guides[0][0], (40, 60))
+
+    def test_rotate_point_supports_angle_adjustment(self) -> None:
+        rotated = rotate_point((100, 0), 90.0, (0, 0))
+        self.assertAlmostEqual(rotated[0], 0.0)
+        self.assertAlmostEqual(rotated[1], 100.0)
+
+    def test_controller_preview_summary_contains_key_settings(self) -> None:
+        controller = PerspectiveGuideController()
+        shape = ((40, 60), (140, 60), (140, 140), (40, 140))
+        config = PerspectiveGuideConfig(horizon_y=120, vanishing_x=300, depth_steps=3, angle_degrees=25.0)
+        summary = controller.preview_summary(shape, config)
+
+        self.assertIn("horizon", summary.lower())
+        self.assertIn("25", summary)
+        self.assertIn("3", summary)
 
 
 if __name__ == "__main__":

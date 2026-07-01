@@ -6,6 +6,7 @@
   "features": [
     "Convert simple shapes into perspective guide segments",
     "Project points toward a vanishing point",
+    "Rotate shapes for alternate angles",
     "Create animation-friendly guide lines for building movement"
   ]
 }
