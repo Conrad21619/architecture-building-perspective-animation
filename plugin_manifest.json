@@ -1,0 +1,11 @@
+{
+  "name": "Architecture Perspective Guide Tool",
+  "version": "0.1.0",
+  "description": "A guide tool for converting drawn shapes into perspective-based building guides for animation.",
+  "entry": "perspective_guide_tool.py",
+  "features": [
+    "Convert simple shapes into perspective guide segments",
+    "Project points toward a vanishing point",
+    "Create animation-friendly guide lines for building movement"
+  ]
+}
