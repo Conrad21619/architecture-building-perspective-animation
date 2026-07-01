@@ -131,6 +131,20 @@ class PerspectiveGuideController:
             f"angle={config.angle_degrees}, steps={config.depth_steps}, guides={len(guides)}"
         )
 
+    def export_guides(self, shape_points: Sequence[Point], config: PerspectiveGuideConfig) -> dict:
+        guides = create_animation_guides(shape_points, config)
+        return {
+            "guide_count": len(guides),
+            "guides": guides,
+            "config": {
+                "horizon_y": config.horizon_y,
+                "vanishing_x": config.vanishing_x,
+                "angle_degrees": config.angle_degrees,
+                "depth_steps": config.depth_steps,
+                "guide_color": config.guide_color,
+            },
+        }
+
     def preview_window(self, shape_points: Sequence[Point], config: PerspectiveGuideConfig) -> Optional[object]:
         if Tk is None or ttk is None or Canvas is None or Label is None or Scale is None or StringVar is None:
             return None
@@ -179,7 +193,18 @@ class PerspectiveGuideController:
 
         ttk.Label(controls_frame, text="Color").grid(row=4, column=0, sticky="w")
         ttk.Entry(controls_frame, textvariable=color_var).grid(row=4, column=1, sticky="ew")
-        ttk.Button(controls_frame, text="Refresh", command=update_preview).grid(row=5, column=1, sticky="e", pady=(6, 0))
+        ttk.Button(controls_frame, text="Refresh", command=update_preview).grid(row=5, column=0, sticky="w", pady=(6, 0))
+        ttk.Button(
+            controls_frame,
+            text="Apply to canvas",
+            command=lambda: self.export_guides(shape_points, self.build_config(
+                horizon_y=horizon_var.get(),
+                vanishing_x=vanishing_var.get(),
+                angle_degrees=angle_var.get(),
+                depth_steps=depth_var.get(),
+                guide_color=color_var.get(),
+            )),
+        ).grid(row=5, column=1, sticky="e", pady=(6, 0))
 
         canvas = Canvas(frame, width=720, height=320, bg="white")
         canvas.pack(fill="both", expand=True)

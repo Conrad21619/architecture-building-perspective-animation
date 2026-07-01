@@ -72,6 +72,16 @@ class PerspectiveGuideToolTests(unittest.TestCase):
         self.assertIn("angle", controls)
         self.assertIn("depth", controls)
 
+    def test_controller_exports_guide_payload(self) -> None:
+        controller = PerspectiveGuideController()
+        shape = ((40, 60), (140, 60), (140, 140), (40, 140))
+        config = PerspectiveGuideConfig(horizon_y=120, vanishing_x=300, depth_steps=3, angle_degrees=10.0)
+        payload = controller.export_guides(shape, config)
+
+        self.assertEqual(payload["guide_count"], 3)
+        self.assertEqual(payload["config"]["horizon_y"], 120)
+        self.assertEqual(payload["config"]["angle_degrees"], 10.0)
+
 
 if __name__ == "__main__":
     unittest.main()
